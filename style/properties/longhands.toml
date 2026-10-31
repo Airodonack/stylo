@@ -1879,7 +1879,6 @@ affects = "paint"
 type = "ScrollbarColor"
 initial = "Default::default()"
 struct = "inherited_ui"
-servo_pref = "layout.unimplemented"
 spec = "https://drafts.csswg.org/css-scrollbars-1/#scrollbar-color"
 boxed = true
 ignored_when_colors_disabled = true
@@ -1931,7 +1930,6 @@ affects = "paint"
 type = "ScrollbarGutter"
 initial = "computed::ScrollbarGutter::AUTO"
 struct = "box"
-engine = "gecko"
 animation_type = "discrete"
 spec = "https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property"
 affects = "layout"
@@ -4141,7 +4139,6 @@ keyword = { values = ["auto", "normal", "active", "disabled", "inactive"] }
 
 [scrollbar-width]
 struct = "ui"
-servo_pref = "layout.unimplemented"
 spec = "https://drafts.csswg.org/css-scrollbars-1/#scrollbar-width"
 animation_type = "discrete"
 affects = "layout"
