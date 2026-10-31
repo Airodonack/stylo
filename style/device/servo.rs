@@ -387,7 +387,8 @@ impl Device {
         // <https://www.w3.org/TR/css-color-4/#css-system-colors>
         if self.is_dark_color_scheme(color_scheme_flags) {
             match system_color {
-                SystemColor::Accentcolor => srgb(10, 132, 255),
+                // `-servo-accent-color` is resolved when computed; see `SystemColor::compute`.
+                SystemColor::Accentcolor | SystemColor::ServoAccentColor => srgb(10, 132, 255),
                 SystemColor::Accentcolortext => srgb(255, 255, 255),
                 SystemColor::Activetext => srgb(255, 0, 0),
                 SystemColor::Linktext => srgb(158, 158, 255),
@@ -437,7 +438,8 @@ impl Device {
             }
         } else {
             match system_color {
-                SystemColor::Accentcolor => srgb(0, 102, 204),
+                // `-servo-accent-color` is resolved when computed; see `SystemColor::compute`.
+                SystemColor::Accentcolor | SystemColor::ServoAccentColor => srgb(0, 102, 204),
                 SystemColor::Accentcolortext => srgb(255, 255, 255),
                 SystemColor::Activetext => srgb(238, 0, 0),
                 SystemColor::Linktext => srgb(0, 0, 238),
