@@ -515,12 +515,52 @@ pub enum SystemColor {
     Menutext,
     Windowtext,
     Inactivecaptiontext,
+
+    /// The `accent-color` of the form control that a user agent widget part (such as the
+    /// bullet of a radio button or the thumb of a range input) belongs to, which is its
+    /// parent, or `currentcolor` when that is `auto`. Only for user agent style sheets.
+    /// <https://drafts.csswg.org/css-ui-4/#widget-accent>
+    #[css(keyword = "-servo-accent-color")]
+    #[parse(condition = "ParserContext::chrome_rules_enabled")]
+    ServoAccentColor,
 }
 
 #[cfg(feature = "servo")]
 impl SystemColor {
     #[inline]
     fn compute(&self, cx: &Context) -> ComputedColor {
+        if *self == SystemColor::ServoAccentColor {
+            return match cx.builder.get_parent_inherited_ui().clone_accent_color() {
+                // A partially or fully transparent accent color is precomposed over the
+                // canvas color of the used color scheme, as the WPT tests for
+                // <https://drafts.csswg.org/css-ui-4/#widget-accent> expect.
+                GenericColorOrAuto::Color(ComputedColor::Absolute(color)) if color.alpha < 1.0 => {
+                    if cx.for_non_inherited_property {
+                        cx.rule_cache_conditions
+                            .borrow_mut()
+                            .set_color_scheme_dependency(cx.builder.color_scheme);
+                    }
+                    let canvas = cx
+                        .device()
+                        .system_color(SystemColor::Canvas, cx.builder.color_scheme)
+                        .to_color_space(ColorSpace::Srgb);
+                    let color = color.to_color_space(ColorSpace::Srgb);
+                    let alpha = color.alpha.clamp(0.0, 1.0);
+                    let over_canvas =
+                        |component: f32, canvas: f32| component * alpha + canvas * (1.0 - alpha);
+                    ComputedColor::Absolute(AbsoluteColor::new(
+                        ColorSpace::Srgb,
+                        over_canvas(color.components.0, canvas.components.0),
+                        over_canvas(color.components.1, canvas.components.1),
+                        over_canvas(color.components.2, canvas.components.2),
+                        1.0,
+                    ))
+                },
+                GenericColorOrAuto::Color(color) => color,
+                GenericColorOrAuto::Auto => ComputedColor::currentcolor(),
+            };
+        }
+
         if cx.for_non_inherited_property {
             cx.rule_cache_conditions
                 .borrow_mut()
@@ -580,7 +620,7 @@ impl Color {
                         return Ok(Color::System(system));
                     }
                     #[cfg(feature = "servo")]
-                    if let Ok(system) = input.try_parse(SystemColor::parse) {
+                    if let Ok(system) = input.try_parse(|i| SystemColor::parse(context, i)) {
                         return Ok(Color::System(system));
                     }
                 }
