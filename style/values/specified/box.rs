@@ -171,7 +171,6 @@ pub enum DisplayInside {
     RubyText,
     #[cfg(feature = "gecko")]
     RubyTextContainer,
-    #[cfg(feature = "gecko")]
     WebkitBox,
 }
 
@@ -239,7 +238,6 @@ impl Display {
     );
     pub const Block: Self =
         Self(((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::Flow as u16);
-    #[cfg(feature = "gecko")]
     pub const FlowRoot: Self = Self(
         ((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::FlowRoot as u16,
     );
@@ -268,11 +266,9 @@ impl Display {
     #[cfg(feature = "gecko")]
     pub const Ruby: Self =
         Self(((DisplayOutside::Inline as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::Ruby as u16);
-    #[cfg(feature = "gecko")]
     pub const WebkitBox: Self = Self(
         ((DisplayOutside::Block as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::WebkitBox as u16,
     );
-    #[cfg(feature = "gecko")]
     pub const WebkitInlineBox: Self = Self(
         ((DisplayOutside::Inline as u16) << Self::OUTSIDE_SHIFT) | DisplayInside::WebkitBox as u16,
     );
@@ -525,9 +521,7 @@ impl DisplayKeyword {
             "ruby-text" => Full(Display::RubyText),
             #[cfg(feature = "gecko")]
             "ruby-text-container" => Full(Display::RubyTextContainer),
-            #[cfg(feature = "gecko")]
             "-webkit-box" => Full(Display::WebkitBox),
-            #[cfg(feature = "gecko")]
             "-webkit-inline-box" => Full(Display::WebkitInlineBox),
 
             /// <display-outside> = block | inline | run-in
@@ -561,7 +555,6 @@ impl ToCss for Display {
         match *self {
             Display::Block | Display::Inline => outside.to_css(dest),
             Display::InlineBlock => dest.write_str("inline-block"),
-            #[cfg(feature = "gecko")]
             Display::WebkitInlineBox => dest.write_str("-webkit-inline-box"),
             Display::TableCaption => dest.write_str("table-caption"),
             _ => match (outside, inside) {
@@ -1523,7 +1516,6 @@ impl LineClamp {
     }
 
     /// Serializes the legacy `-webkit-line-clamp` syntax.
-    #[cfg_attr(feature = "servo", allow(unused))]
     pub(crate) fn to_css_legacy<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
         W: fmt::Write,
