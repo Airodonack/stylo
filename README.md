@@ -1,105 +1,145 @@
-Stylo
-=====
+# Stylo for VODscribe
 
-**High-Performance CSS Style Engine**
+This is a fork of [Stylo](https://github.com/servo/stylo), the CSS engine of Servo and Firefox.
+The [Servo fork](https://github.com/Airodonack/servo) that runs the VODscribe desktop app builds against it.
+It tracks stylo `main` and adds three commits, each meant for upstream.
+This README is one more commit on top of them, so it never reaches upstream.
 
-[![Build Status](https://github.com/servo/stylo/actions/workflows/main.yml/badge.svg)](https://github.com/servo/stylo/actions)
-[![Crates.io](https://img.shields.io/crates/v/stylo.svg)](https://crates.io/crates/stylo)
-[![Docs](https://docs.rs/stylo/badge.svg)](https://docs.rs/stylo)
-![Crates.io License](https://img.shields.io/crates/l/stylo)
-
-Stylo is a high-performance, browser-grade CSS style engine written in Rust that powers [Servo](https://servo.org) and [Firefox](https://firefox.com). This repo contains Servo’s downstream version of Stylo. The upstream version lives in mozilla-central with the rest of the Gecko/Firefox codebase.
-
-Coordination of Stylo development happens:
-
-- Here in Github Issues
-- In the [#stylo](https://servo.zulipchat.com/#narrow/channel/417109-stylo) channel of the [Servo Zulip](https://servo.zulipchat.com/)
-- In the [#layout](https://chat.mozilla.org/#/room/#layout:mozilla.org) room of the Mozilla Matrix instance (matrix.mozilla.org)
-
-## High-Level Documentation
-
-- This [Mozilla Hacks article](https://hacks.mozilla.org/2017/08/inside-a-super-fast-css-engine-quantum-css-aka-stylo) contains a high-level overview of the Stylo architecture.
-- There is a [chapter](https://book.servo.org/architecture/style.html) in the Servo Book (although it is a little out of date).
-
-## Branches
-
-The branches are as follows:
-
-- [**upstream**](https://github.com/servo/style/tree/upstream) has upstream [mozilla-central](https://searchfox.org/mozilla-central/source/servo) filtered to the paths we care about ([style.paths](style.paths)), but is otherwise unmodified.
-- [**main**](https://github.com/servo/style/tree/ci) adds our downstream patches, plus the scripts and workflows for syncing with mozilla-central on top of **upstream**.
-
-> [!WARNING]
-> This repo syncs from upstream by creating a new branch and then rebasing our changes on top of it. This means that `git pull` will not work across syncs (you will need to use `git fetch`, `git reset` and `git rebase`).
-
-More information on the syncing process is available in [SYNCING.md](SYNCING.md)
-
-## Crates
-
-A guide to the crates contained within this repo
-
-### Stylo Crates
-
-These crates are largely implementation details of Stylo, although you may need to use some of them directly if you use Stylo.
-
-| Directory          | Crate                                                                                                               | Notes                                                                                                             |
-| ---                | ---                                                                                                                 | ---                                                                                                               |
-| style              | [![Crates.io](https://img.shields.io/crates/v/stylo.svg)](https://crates.io/crates/stylo)                           | The main Stylo crate containing the entire CSS engine                                                             |
-| style_traits       | [![Crates.io](https://img.shields.io/crates/v/stylo_traits.svg)](https://crates.io/crates/stylo_traits)             | Types and traits which allow other code to interoperate with Stylo without depending on the main crate directly.  |
-| stylo_dom          | [![Crates.io](https://img.shields.io/crates/v/stylo_dom.svg)](https://crates.io/crates/stylo_dom)                   | Similar to stylo_traits (but much smaller)                                                                        |
-| stylo_atoms        | [![Crates.io](https://img.shields.io/crates/v/stylo_atoms.svg)](https://crates.io/crates/stylo_atoms)               | [Atoms](https://docs.rs/string_cache/latest/string_cache/struct.Atom.html) for CSS and HTML event related strings |
-| stylo_static_prefs | [![Crates.io](https://img.shields.io/crates/v/stylo_static_prefs.svg)](https://crates.io/crates/stylo_static_prefs) | Configuration for Stylo. Can be used to set runtime preferences (enabling/disabling properties, etc)              |
-| style_derive       | [![Crates.io](https://img.shields.io/crates/v/stylo_derive.svg)](https://crates.io/crates/stylo_derive)             | Internal derive macro for stylo crate                                                                             |
-
-### Standalone Crates
-
-These crates form part of Stylo but are also be useful standalone.
-
-| Directory | Crate                                                                                             | Notes                   |
-| ---       | ---                                                                                               | ---                     |
-| selectors | [![Crates.io](https://img.shields.io/crates/v/selectors.svg)](https://crates.io/crates/selectors) | CSS Selector matching   |
-| servo_arc | [![Crates.io](https://img.shields.io/crates/v/servo_arc.svg)](https://crates.io/crates/servo_arc) | A variant on `std::Arc` |
-
-You may also be interested in the `cssparser` crate which lives in the [servo/rust-cssparser](https://github.com/servo/rust-cssparser) repo.
-
-### Support Crates
-
-Low-level crates which could technically be used standalone but are unlikely to be generally useful in practice.
-
-| Directory       | Crate                                                                                                                   | Notes                                                       |
-| ---             | ---                                                                                                                     | ---                                                         |
-| malloc_size_of  | [![Crates.io](https://img.shields.io/crates/v/stylo_malloc_size_of.svg)](https://crates.io/crates/stylo_malloc_size_of) | Heap size measurement for Stylo values                      |
-| to_shmem        | [![Crates.io](https://img.shields.io/crates/v/to_shmem.svg)](https://crates.io/crates/to_shmem)                         | Internal utility crate for sharing memory across processes. |
-| to_shmem_derive | [![Crates.io](https://img.shields.io/crates/v/to_shmem_derive.svg)](https://crates.io/crates/to_shmem_derive)           | Internal derive macro for to_shmem crate                    |
-
-## Building Servo Against a Local Copy of Stylo
-
-Assuming your local `servo` and `stylo` directories are siblings, you can build `servo` against `stylo` by adding the following to `servo/Cargo.toml`:
+Servo takes stylo by git revision, so the Servo fork pins this one the same way.
+Its `Cargo.toml` patches all eleven crates of this workspace together, or Cargo builds two copies of the shared ones:
 
 ```toml
 [patch."https://github.com/servo/stylo"]
-selectors = { path = "../stylo/selectors" }
-servo_arc = { path = "../stylo/servo_arc" }
-stylo = { path = "../stylo/style" }
-stylo_atoms = { path = "../stylo/stylo_atoms" }
-stylo_dom = { path = "../stylo/stylo_dom" }
-stylo_malloc_size_of = { path = "../stylo/malloc_size_of" }
-stylo_static_prefs = { path = "../stylo/stylo_static_prefs" }
-stylo_traits = { path = "../stylo/style_traits" }
+stylo = { git = "https://github.com/Airodonack/stylo", rev = "<commit below this README>" }
+selectors = { git = "https://github.com/Airodonack/stylo", rev = "<same commit>" }
+# ...and servo_arc, stylo_atoms, stylo_derive, stylo_dom, stylo_malloc_size_of,
+# stylo_static_prefs, stylo_traits, to_shmem, to_shmem_derive
 ```
 
-## Releases
+## The stack
 
-Releases are made every time this repository rebases its changes on top of the latest version of upstream Stylo. There are a lot of crates here. In order to publish them, they must be done in order. One order that works is:
+On stylo `main`, oldest first:
 
-- selectors
-- stylo_static_prefs
-- stylo_atoms
-- stylo_malloc_size_of
-- stylo_dom
-- stylo_derive
-- stylo_traits
-- stylo
+1. Servo pages can use accent-color, and UA sheets can paint with it
+2. Servo pages can use scrollbar-gutter
+3. Servo pages can use -webkit-line-clamp and display: -webkit-box
+4. This README
+
+The branch is rebased onto stylo `main` as upstream moves.
+
+## 1. accent-color
+
+**What a page gets.**
+`accent-color` works in Servo.
+The checked radio button, the checkbox check, and the filled part and thumb of a slider take its colour.
+With `auto` the controls keep their usual colours.
+
+**Why upstream wants it.**
+Stylo already parses and computes `accent-color`, but only for Gecko.
+Servo draws form controls with user agent CSS, and that CSS had no way to read the property.
+
+**What changes in stylo.**
+
+- `style/properties/longhands.toml`: `accent-color` is built for Servo and restyles with a repaint.
+- `style/values/specified/color.rs`: a new colour keyword, `-servo-accent-color`, computes to the parent's `accent-color`, or to `currentcolor` when that is `auto`.
+  It parses only in user agent and chrome sheets, so pages cannot use it.
+  A translucent accent is laid over the canvas colour of the used colour scheme, as the WPT tests expect.
+- `style/device/servo.rs`: the keyword falls back to the same system colour as `AccentColor`.
+
+**What the Servo side needs.**
+`servo.css` sets the old colour as `color` on each control part and `-servo-accent-color` as its fill.
+Disabled controls stay grey.
+
+**Spec.**
+[CSS UI 4, accent-color](https://drafts.csswg.org/css-ui-4/#widget-accent): it "allows the author to specify the accent color for user-interface controls generated by the element".
+
+**Checked.**
+WPT `css/css-ui` accent-color tests, and a test page compared pixel by pixel with headless Chrome.
+`CSS.supports("color", "-servo-accent-color")` is false for pages.
+
+## 2. scrollbar-gutter
+
+**What a page gets.**
+With the Servo fork, pages can set `scrollbar-width`, `scrollbar-color` and `scrollbar-gutter`.
+`getComputedStyle` reports them and `CSS.supports` answers true.
+
+**Why upstream wants it.**
+Stylo parses and computes all three already.
+`scrollbar-gutter` was built for Gecko only, so Servo's layout could not reserve room for a scrollbar.
+
+**What changes in stylo.**
+One line in `style/properties/longhands.toml`: `scrollbar-gutter` is built for Servo too.
+`scrollbar-width` and `scrollbar-color` need no change here.
+
+**What the Servo side needs.**
+On stylo `main`, `scrollbar-width` and `scrollbar-color` sit behind the preference `layout.css.scrollbar-styling.enabled`, off by default.
+The Servo fork turns it on in `components/config/prefs.rs`.
+Servo's DOM bindings take the property list from stylo's generated `css-properties.json`, so nothing else is needed for the CSSOM.
+
+```mermaid
+flowchart LR
+  G[scrollbar-gutter] -->|this commit| S[built for Servo]
+  W[scrollbar-width<br>scrollbar-color] --> P{layout.css.scrollbar-styling.enabled}
+  P -->|on in the Servo fork| S
+  S --> D[getComputedStyle, CSS.supports, layout]
+```
+
+**Spec.**
+[CSS Overflow 3, scrollbar-gutter](https://drafts.csswg.org/css-overflow-3/#scrollbar-gutter-property) and [CSS Scrollbars 1](https://drafts.csswg.org/css-scrollbars-1/).
+
+**Checked.**
+WPT `css/css-scrollbars` and `css/css-overflow` with the Servo fork.
+A test page returns the same computed values as headless Chrome.
+
+## 3. -webkit-line-clamp
+
+**What a page gets.**
+Text clamped with `display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: N` shows only its first N lines.
+Before, Servo dropped all three declarations and the text kept every line.
+
+**Why upstream wants it.**
+Many sites clamp titles this way.
+Stylo has it all for Gecko; this commit only lifts the Gecko-only gates.
+
+**What changes in stylo.**
+
+- `style/properties/shorthands.toml`: `-webkit-line-clamp` is built for Servo.
+  It sets the `line-clamp` longhand even while that longhand's preference, `layout.css.line-clamp.enabled`, is off, as in Gecko.
+  So the unprefixed `line-clamp` stays hidden from pages, as in Chrome.
+- `style/properties/longhands.toml`: `-moz-box-orient` and its alias `-webkit-box-orient` are built for Servo.
+  They live in the XUL style struct, so Servo's `ComputedValues` grows from 232 to 240 bytes; the size test in `style/properties/properties.mako.rs` says so.
+- `style/values/specified/box.rs`: `display: -webkit-box`, `-webkit-inline-box` and `flow-root` exist for Servo.
+- `style/style_adjuster.rs`: a clamped vertical `-webkit-box` computes to `flow-root`, and a `-webkit-inline-box` to `inline-block`.
+  The original display is kept so layout can tell the legacy case apart.
+
+```mermaid
+flowchart LR
+  A["display: -webkit-box"] --> C{"-webkit-box-orient: vertical<br>and a line clamp?"}
+  C -->|yes| F["display computes to flow-root<br>line-clamp longhand set"]
+  C -->|no| K["stays -webkit-box"]
+```
+
+**What the Servo side needs.**
+The Servo fork's layout counts line boxes in the clamped box and drops what comes after the Nth line.
+It puts an ellipsis at the end of that line and sizes the box to the lines it keeps.
+An unclamped `-webkit-box` is laid out as a flex container.
+
+**Spec.**
+[CSS Overflow 4, legacy compatibility](https://drafts.csswg.org/css-overflow-4/#webkit-line-clamp): "UAs that support line-clamp must also support the -webkit-line-clamp property".
+[CSS Overflow 4, continue](https://drafts.csswg.org/css-overflow-4/#continue): with the clamp, "If the specified value of the display property is -webkit-box, the computed value becomes flow-root".
+
+**Checked.**
+A test page gives the same height, `display` and `-webkit-line-clamp` values as Chrome 156.
+`CSS.supports` is true for `display: -webkit-box` and `-webkit-line-clamp`, and false for `line-clamp`, as in Chrome.
+In WPT `css/css-overflow/line-clamp` and the parsing tests, 17 subtests go from FAIL to PASS.
+`cargo check -p stylo` with the `servo` feature builds.
+
+## Not done
+
+- The unprefixed `line-clamp` stays behind its preference; Chrome does not ship it either.
+- `-moz-box-orient` is exposed next to `-webkit-box-orient`; Chrome has only the latter.
+- The legacy box's own `-webkit-box-align`, `-webkit-box-pack` and `-webkit-box-flex` are not done for Servo.
 
 ## License
 
-Stylo is licensed under MPL 2.0
+MPL 2.0, as upstream Stylo.
